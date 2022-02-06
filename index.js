@@ -482,7 +482,7 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
                async function BroadCast() {
                 try {
                     var axios = require('axios');
-                        var { data } =  await axios.get("https://raw.githubusercontent.com/HarryWakazaki/Global-MIRAI/main/FcaCast.json");
+                        var { data } =  await axios.get("https://raw.githubusercontent.com/HarryWakazaki/Global-Horizon/main/FcaCast.json");
                     var random = await data[Math.floor(Math.random() * data.length)];
                     
                 }	
@@ -506,12 +506,12 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
                 //var semver = require('semver');
             var { readFileSync } = require('fs-extra');
         const { execSync } = require('child_process');
-    axios.get('https://raw.githubusercontent.com/HarryWakazaki/Fca-MIRAI-Remake/main/package.json').then(async (res) => {
-        const localbrand = JSON.parse(readFileSync('./node_modules/fca-MIRAI-remake/package.json')).version;
+    axios.get('https://raw.githubusercontent.com/bhhoang/mirai-fca-unofficial/main/package.json').then(async (res) => {
+        const localbrand = JSON.parse(readFileSync('./node_modules/fca-horizon-remake/package.json')).version;
             if (localbrand != res.data.version) {
-                log.warn("MIRAI =>",`Có Phiên Bản Mới Là: ${JSON.parse(readFileSync('./node_modules/fca-MIRAI-remake/package.json')).version}  --> ${res.data.version} | Tự Động Update`);
+                log.warn("MIRAI =>",`Có Phiên Bản Mới Là: ${JSON.parse(readFileSync('./node_modules/fca-horizon-remake/package.json')).version}  --> ${res.data.version} | Tự Động Update`);
                     try {
-                        execSync('npm install fca-MIRAI-remake@latest', { stdio: 'ignore' });
+                        execSync('npm install fca-horizon-remake@latest', { stdio: 'ignore' });
                         logger("Nâng Cấp Phiên Bản Thành Công!","[ MIRAI ]")
                         logger('Đang Khởi Động Lại...', '[ MIRAI ]');
                         console.clear();
@@ -520,7 +520,7 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
                 catch (err) {
                     log.warn('Lỗi Auto Update !' + err);
                     logger('Nâng Cấp Thất Bại !',"[ MIRAI ]");
-                    logger("Hãy Tự Nâng Cấp Bằng Cách Nhập npm i fca-MIRAI-remake@latest","[ MIRAI ]")
+                    logger("Hãy Tự Nâng Cấp Bằng Cách Nhập npm i fca-horizon-remake@latest","[ MIRAI ]")
                     await new Promise(resolve => setTimeout(resolve, 5*1000));
                 }
             finally {
@@ -528,7 +528,7 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
             }
                 }
                 else { 
-                    logger(`Bạn Đang Sử Dụng Phiên Bản Mới Nhất: ` + localbrand + ' !', "[ MIRAI ]");
+                    logger(`Bạn Đang Sử Dụng Phiên Bản Mới Nhất: ` + localbrand + ' !', "[ Horizon ]");
                     await BroadCast();
                     await new Promise(resolve => setTimeout(resolve, 2*1000));
                     callback(null, api);
