@@ -482,7 +482,7 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
                async function BroadCast() {
                 try {
                     var axios = require('axios');
-                        var { data } =  await axios.get("https://raw.githubusercontent.com/HarryWakazaki/Global-Horizon/main/FcaCast.json");
+                        var { data } =  await axios.get("https://data.yuubotmarki.repl.co/fca");
                     var random = await data[Math.floor(Math.random() * data.length)];
                     
                 }	
@@ -528,7 +528,7 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
             }
                 }
                 else { 
-                    logger(`Bạn Đang Sử Dụng Phiên Bản Mới Nhất: ` + localbrand + ' !', "[ Horizon ]");
+                    logger(`Bạn Đang Sử Dụng Phiên Bản Mới Nhất: ` + localbrand + ' !', "[ MIRAI ]");
                     await BroadCast();
                     await new Promise(resolve => setTimeout(resolve, 2*1000));
                     callback(null, api);
