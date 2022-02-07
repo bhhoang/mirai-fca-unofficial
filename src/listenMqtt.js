@@ -81,18 +81,7 @@ function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
     });
 
     mqttClient.on('connect', function () {
-        
-const http = require("http");
-    const dashboard = http.createServer(function (request, res) {
-        res.writeHead(200, "OK", { "Content-Type": "text/plain" });
-        res.write("If Fca-horizon-remake error, Pls contact fb.com/Lazic.Kanzu");
-        res.end();
-    });
-/*
-    ! Vô Nghĩa Thành Ko Có Nghĩa 
-*/
-        dashboard.listen(25565);
-
+     
         topics.forEach(topicsub => mqttClient.subscribe(topicsub));
 
         var topic;
