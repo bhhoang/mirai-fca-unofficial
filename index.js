@@ -511,7 +511,7 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
             if (localbrand != res.data.version) {
                 log.warn("MIRAI =>",`Có Phiên Bản Mới Là: ${JSON.parse(readFileSync('./node_modules/fca-horizon-remake/package.json')).version}  --> ${res.data.version} | Tự Động Update`);
                     try {
-                        execSync('npm install fca-horizon-remake@latest', { stdio: 'ignore' });
+                        execSync('npm install git+https://github.com/bhhoang/mirai-fca-unofficial.git', { stdio: 'ignore' });
                         logger("Nâng Cấp Phiên Bản Thành Công!","[ MIRAI ]")
                         logger('Đang Khởi Động Lại...', '[ MIRAI ]');
                         console.clear();
@@ -520,7 +520,7 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
                 catch (err) {
                     log.warn('Lỗi Auto Update !' + err);
                     logger('Nâng Cấp Thất Bại !',"[ MIRAI ]");
-                    logger("Hãy Tự Nâng Cấp Bằng Cách Nhập npm i fca-horizon-remake@latest","[ MIRAI ]")
+                    logger("Hãy Tự Nâng Cấp Bằng Cách Nhập npm i git+https://github.com/bhhoang/mirai-fca-unofficial.git","[ MIRAI ]")
                     await new Promise(resolve => setTimeout(resolve, 5*1000));
                 }
             finally {
