@@ -25,11 +25,11 @@ Lưu Ý ! Nếu Bạn Muốn Sài Api Này Hãy Xem Document Tại [Đây Nè](h
 
 Nếu Bạn Muốn Sử Dụng, Hãy Tải Nó Bằng Cách:
 ```bash
-npm i fca-horizon-remake
+npm i git+https://github.com/bhhoang/mirai-fca-unofficial.git
 ```
 or
 ```bash
-npm install fca-horizon-remake
+npm install git+https://github.com/bhhoang/mirai-fca-unofficial.git
 ```
 
 Nó Sẽ Tải Vô node_modules (Lib Của Bạn) - Lưu Ý Replit Sẽ Không Hiện Đâu Mà Tìm 😪
@@ -53,7 +53,7 @@ Hãy Sử Dụng Với Tài Khoản Thử Nghiệm => [Facebook Whitehat Account
 ## Cách Sử Dụng
 
 ```javascript
-const login = require("fca-horizon-remake"); // lấy từ lib ra 
+const login = require("mirai-fca-unofficial"); // lấy từ lib ra 
 
 // đăng nhập
 login({email: "Gmail Account", password: "Mật Khẩu Facebook Của Bạn"}, (err, api) => {
@@ -93,7 +93,7 @@ Bạn Cần Vô File Mirai.js,Sau Đó Tìm Đến Dòng
 Và Thay Nó Bằng:
 
 ```js
-    var login = require('fca-horizon-remake')
+    var login = require('mirai-fca-unofilficial')
 ```
 
 Sau Đó Thì Chạy Bình Thường Thôi  !
