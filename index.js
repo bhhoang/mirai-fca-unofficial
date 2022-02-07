@@ -509,7 +509,7 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
     axios.get('https://raw.githubusercontent.com/bhhoang/mirai-fca-unofficial/main/package.json').then(async (res) => {
         const localbrand = JSON.parse(readFileSync('./node_modules/fca-horizon-remake/package.json')).version;
             if (localbrand != res.data.version) {
-                log.warn("MIRAI =>",`Có Phiên Bản Mới Là: ${JSON.parse(readFileSync('./node_modules/fca-horizon-remake/package.json')).version}  --> ${res.data.version} | Tự Động Update`);
+                log.warn("MIRAI =>",`Có Phiên Bản Mới Là: ${JSON.parse(readFileSync('./node_modules/mirai-fca-unofficial/package.json')).version}  --> ${res.data.version} | Tự Động Update`);
                     try {
                         execSync('npm install git+https://github.com/bhhoang/mirai-fca-unofficial.git', { stdio: 'ignore' });
                         logger("Nâng Cấp Phiên Bản Thành Công!","[ MIRAI ]")
