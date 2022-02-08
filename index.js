@@ -476,27 +476,6 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
             });
     }
 
-    // At the end we call the callback or catch an exception
-               //!---------- Junk Code - Fca-BroadCasr -----------------!//
-
-               async function BroadCast() {
-                try {
-                    var axios = require('axios');
-                        var { data } =  await axios.get("https://data.yuubotmarki.repl.co/fca");
-                    var random = await data[Math.floor(Math.random() * data.length)];
-                    
-                }	
-                catch (e) {
-                    console.log(e);
-                    return;
-                }
-                finally {
-                    logger(random, "[ MIRAI ]");
-                }
-                setInterval(async function () {await BroadCast()},1800 * 1000);
-            }
-
-            //!---------- Junk Code - Fca-BroadCasr -----------------!//
     mainPromise
         .then(function() {
             logger('Hoàn Thành Quá Trình Đăng Nhập !', "[ MIRAI ]");
@@ -529,7 +508,6 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
                 }
                 else { 
                     logger(`Bạn Đang Sử Dụng Phiên Bản Mới Nhất: ` + localbrand + ' !', "[ MIRAI ]");
-                    await BroadCast();
                     await new Promise(resolve => setTimeout(resolve, 2*1000));
                     callback(null, api);
                 }
