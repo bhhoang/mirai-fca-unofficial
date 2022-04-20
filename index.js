@@ -218,29 +218,38 @@ function buildAPI(globalOptions, html, jar) {
 }
 
 function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
-    return function(res) {
+    return async function(res) {
         var html = res.body;
         var $ = cheerio.load(html);
-        var arr = [];
+        
+        const jazoest = $('input[name=jazoest]').attr('value');
+		const lsd = $('input[name=lsd]').attr('value');
+		const publicKeyDataString = utils.getFrom(html, 'pubKeyData:', '}') + '}';
+		const publicKeyData = {
+			publicKey: utils.getFrom(publicKeyDataString, 'publicKey:"', '"'),
+			keyId: utils.getFrom(publicKeyDataString, 'keyId:', '}')
+		};
+		// in newer versions of Facebook, encrypted password is being used
+		// (even Instagram uses the same technique to send password during login)
 
-        // This will be empty, but just to be sure we leave it
-        $("#login_form input").map((i, v) => arr.push({ val: $(v).val(), name: $(v).attr("name") }));
+		const currentTime = Math.floor(Date.now() / 1000).toString();
+		const form = {
+			jazoest,
+			lsd,
+			email,
+			login_source: 'comet_headerless_login',
+			next: '',
+			// eslint-disable-next-line @typescript-eslint/no-var-requires
+			encpass: `#PWD_BROWSER:5:${currentTime}:${await require('./lib/passwordHasher.js')(
+				publicKeyData,
+				currentTime,
+				password
+			)}`
+		};
 
-        arr = arr.filter(function(v) {
-            return v.val && v.val.length;
-        });
-
-        var form = utils.arrToForm(arr);
-        form.lsd = utils.getFrom(html, "[\"LSD\",[],{\"token\":\"", "\"}");
-        form.lgndim = Buffer.from("{\"w\":1440,\"h\":900,\"aw\":1440,\"ah\":834,\"c\":24}").toString('base64');
-        form.email = email;
-        form.pass = password;
-        form.default_persistent = '0';
-        form.lgnrnd = utils.getFrom(html, "name=\"lgnrnd\" value=\"", "\"");
-        form.locale = 'en_US';
-        form.timezone = '240';
-        form.lgnjs = ~~(Date.now() / 1000);
-
+		const loginUrl = `https://www.facebook.com/login/?privacy_mutation_token=${Buffer.from(
+			`{"type":0,"creation_time":${currentTime},"callsite_id":381229079575946}`
+		).toString('base64')}`;
 
         // Getting cookies from the HTML page... (kill me now plz)
         // we used to get a bunch of cookies in the headers of the response of the
@@ -260,124 +269,64 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
 
         logger("Đang Đăng Nhập...", "[ MIRAI ]");
         return utils
-            .post("https://www.facebook.com/login/device-based/regular/login/?login_attempt=1&lwv=110", jar, form, loginOptions)
+            .post(loginUrl, jar, form, loginOptions)
             .then(utils.saveCookies(jar))
-            .then(function(res) {
-                var headers = res.headers;
-                if (!headers.location) throw { error: "Sai Mật Khẩu Hoặc Tài Khoản !" };
+            .then(async function(res) {
+                utils.saveCookies(jar)(res);
+
+                const headers = res.headers;
+
+                if (!res.body.includes('window.location.replace')) throw { error: 'Sai mật khẩu hoặc tài khoản' };
+                const redirect = utils.getFrom(res.body, 'window.location.replace("', '")');
+			    log.info('login', `Đang chuyển hướng tới ${redirect}`);
+                console.log(headers)
+                if (headers.location && headers.location.indexOf('https://www.facebook.com/checkpoint/') > -1) {
+                    log.info('login', 'Bạn đang bật bảo mật 2 lớp');
+
 
                 // This means the account has login approvals turned on.
-                if (headers.location.indexOf('https://www.facebook.com/checkpoint/') > -1) {
-                    logger("Bạn Đang Bật 2 Bảo Mật !", "[ MIRAI ]");
+                if (redirect.includes('checkpoint')) {
+                    log.info("Bạn Đang Bật 2 Bảo Mật !");
                     var nextURL = 'https://www.facebook.com/checkpoint/?next=https%3A%2F%2Fwww.facebook.com%2Fhome.php';
+                    return await utils
+					.get(headers.location, jar, null, loginOptions)
+					.then(utils.saveCookies(jar))
+                    .then(async function(res) {
+                        const html = res.body;
+                        const $ = cheerio.load(html);
+						let arr = [];
+						$('form input').map(function (i, v) {
+							arr.push({ val: $(v).val(), name: $(v).attr('name') });
+						});
 
-                    return utils
-                        .get(headers.location, jar, null, loginOptions)
-                        .then(utils.saveCookies(jar))
-                        .then(function(res) {
-                            var html = res.body;
-                            // Make the form in advance which will contain the fb_dtsg and nh
-                            var $ = cheerio.load(html);
-                            var arr = [];
-                            $("form input").map((i, v) => arr.push({ val: $(v).val(), name: $(v).attr("name") }));
-
-                            arr = arr.filter(function(v) {
-                                return v.val && v.val.length;
-                            });
-
-                            var form = utils.arrToForm(arr);
-                            if (html.indexOf("checkpoint/?next") > -1) {
-                                setTimeout(() => {
-                                    checkVerified = setInterval((_form) => {}, 5000, {
-                                        fb_dtsg: form.fb_dtsg,
-                                        jazoest: form.jazoest,
-                                        dpr: 1
-                                    });
-                                }, 2500);
+						arr = arr.filter(function (v) {
+							return v.val && v.val.length;
+						});
+                        console.log(headers.location);
+						const form = utils.arrToForm(arr);
+         
+                            if (redirect.includes('checkpoint')) {
                                 throw {
                                     error: 'login-approval',
-                                    continue: function submit2FA(code) {
+                                    continue: async function submit2FA(code) {
                                         form.approvals_code = code;
-                                        form['submit[Continue]'] = $("#checkpointSubmitButton").html(); //'Continue';
-                                        var prResolve = null;
-                                        var prReject = null;
-                                        var rtPromise = new Promise(function(resolve, reject) {
-                                            prResolve = resolve;
-                                            prReject = reject;
-                                        });
-                                        if (typeof code == "string") {
-                                            utils
-                                                .post(nextURL, jar, form, loginOptions)
-                                                .then(utils.saveCookies(jar))
-                                                .then(function(res) {
-                                                    var $ = cheerio.load(res.body);
-                                                    var error = $("#approvals_code").parent().attr("data-xui-error");
-                                                    if (error) {
-                                                        throw {
-                                                            error: 'login-approval',
-                                                            errordesc: "Invalid 2FA code.",
-                                                            lerror: error,
-                                                            continue: submit2FA
-                                                        };
-                                                    }
-                                                })
-                                                .then(function() {
-                                                    // Use the same form (safe I hope)
-                                                    delete form.no_fido;
-                                                    delete form.approvals_code;
-                                                    form.name_action_selected = 'dont_save'; //'save_device';
+                                        form['submit[Continue]'] = 'Continue'; //'Continue';
+                                        return await utils
+                                            .post(nextURL, jar, form, loginOptions)
+										    .then(utils.saveCookies(jar))
 
-                                                    return utils.post(nextURL, jar, form, loginOptions).then(utils.saveCookies(jar));
-                                                })
-                                                .then(function(res) {
-                                                    var headers = res.headers;
-                                                    if (!headers.location && res.body.indexOf('Review Recent Login') > -1) throw { error: "Something went wrong with login approvals." };
-
-                                                    var appState = utils.getAppState(jar);
-
-                                                    if (callback === prCallback) {
-                                                        callback = function(err, api) {
-                                                            if (err) return prReject(err);
-                                                            return prResolve(api);
-                                                        };
-                                                    }
-
-                                                    // Simply call loginHelper because all it needs is the jar
-                                                    // and will then complete the login process
-                                                    return loginHelper(appState, email, password, loginOptions, callback);
-                                                })
-                                                .catch(function(err) {
-                                                    // Check if using Promise instead of callback
-                                                    if (callback === prCallback) prReject(err);
-                                                    else callback(err);
-                                                });
-                                        } else {
-                                            utils
-                                                .post("https://www.facebook.com/checkpoint/?next=https%3A%2F%2Fwww.facebook.com%2Fhome.php", jar, form, loginOptions, null, { "Referer": "https://www.facebook.com/checkpoint/?next" })
-                                                .then(utils.saveCookies(jar))
-                                                .then(res => {
-                                                    try {
-                                                        JSON.parse(res.body.replace(/for\s*\(\s*;\s*;\s*\)\s*;\s*/, ""));
-                                                    } catch (ex) {
-                                                        clearInterval(checkVerified);
-                                                        logger("Xác Nhận Từ Trình Duyệt, Đang Đăng Nhập...", "[ MIRAI ]");
-                                                        if (callback === prCallback) {
-                                                            callback = function(err, api) {
-                                                                if (err) return prReject(err);
-                                                                return prResolve(api);
-                                                            };
-                                                        }
-                                                        return loginHelper(utils.getAppState(jar), email, password, loginOptions, callback);
-                                                    }
-                                                })
-                                                .catch(ex => {
-                                                    log.error("login", ex);
-                                                    if (callback === prCallback) prReject(ex);
-                                                    else callback(ex);
-                                                });
-                                        }
-                                        return rtPromise;
                                     }
+                                            .then(async () => {
+                                        // Use the same form (safe I hope)
+                                        form.name_action_selected = 'save_device';
+
+                                        return await utils.post(nextURL, jar, form, loginOptions).then(utils.saveCookies(jar));
+                                    })
+                                            .then(async (res)=>{
+                                                if (!headers.location && res.body.indexOf('Review Recent Login') > -1) {
+                                                    throw { error: 'Something went wrong with login approvals.' };
+                                                }
+                                            })
                                 };
                             } else {
                                 if (!loginOptions.forceLogin) throw { error: "Couldn't login. Facebook might have blocked this account. Please login with a browser or enable the option 'forceLogin' and try again." };
@@ -411,6 +360,7 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                 }
 
                 return utils.get('https://www.facebook.com/', jar, null, loginOptions).then(utils.saveCookies(jar));
+            }
             });
     };
 }
@@ -434,7 +384,7 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
         // Open the main page, then we login with the given credentials and finally
         // load the main page again (it'll give us some IDs that we need)
         mainPromise = utils
-            .get("https://www.facebook.com/", null, null, globalOptions, { noRef: true })
+            .get("https://m.facebook.com/", null, null, globalOptions, { noRef: true })
             .then(utils.saveCookies(jar))
             .then(makeLogin(jar, email, password, globalOptions, callback, prCallback))
             .then(function() {
@@ -483,7 +433,7 @@ function loginHelper(appState, email, password, globalOptions, callback, prCallb
                     //!---------- Auto Check, Update START -----------------!//
                     var axios = require('axios');
                 //var semver = require('semver');
-            var { readFileSync } = require('fs-extra');
+            var { readFileSync } = require('fs');
         const { execSync } = require('child_process');
     axios.get('https://raw.githubusercontent.com/bhhoang/mirai-fca-unofficial/main/package.json').then(async (res) => {
         const localbrand = JSON.parse(readFileSync('./node_modules/mirai-fca-unofficial/package.json')).version;
@@ -530,7 +480,7 @@ function login(loginData, options, callback) {
         listenEvents: true,
         listenTyping: false,
         updatePresence: false,
-        forceLogin: false,
+        forceLogin: true,
         autoMarkDelivery: false,
         autoMarkRead: false,
         autoReconnect: true,
