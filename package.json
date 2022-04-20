@@ -1,7 +1,7 @@
 {
   "name": "mirai-fca-unofficial",
   "version": "2.9.1",
-  "description": "Facebook Chat Api Được Remake Bới Nanika",
+  "description": "Facebook Chat Api Được Remake Bới Horizon Chống Get (Không 🐧) Và Pay Acc 🐧",
   "scripts": {
     "test": "mocha",
     "lint": "./node_modules/.bin/eslint **.js",
@@ -33,7 +33,12 @@
     "websocket-stream": "^5.5.0",
     "semver": "",
     "chalk": "4.1.2",
-    "axios": ""
+    "axios": "",
+    "tweetnacl-sealedbox-js": "^1.2.0",
+		"tweetnacl-util": "^0.15.1",
+    "events": "^3.2.0",
+		"form-data": "^4.0.0",
+    "node-emoji": "^1.10.0"
   },
   "engines": {
     "node": ">=10.x"
