@@ -279,7 +279,6 @@ function makeLogin(jar, email, password, loginOptions, callback, prCallback) {
                 if (!res.body.includes('window.location.replace')) throw { error: 'Sai mật khẩu hoặc tài khoản' };
                 const redirect = utils.getFrom(res.body, 'window.location.replace("', '")');
 			    log.info('login', `Đang chuyển hướng tới ${redirect}`);
-                console.log(headers)
                 if (headers.location && headers.location.indexOf('https://www.facebook.com/checkpoint/') > -1) {
                     log.info('login', 'Bạn đang bật bảo mật 2 lớp');
 
